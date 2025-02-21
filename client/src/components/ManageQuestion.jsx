@@ -1,38 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
 const ManageQuestions = () => {
-  const [questions, setQuestions] = useState([
-    {
-      id: 1,
-      title: "Basic Addition",
-      type: "mcq",
-      options: ["3", "4", "5", "6"],
-      correctOption: "4",
-      marks: 1,
-      createdAt: new Date("2023-06-01T10:00:00Z"),
-    },
-    {
-      id: 2,
-      title: "Photosynthesis Explanation",
-      type: "short",
-      shortAnswer:
-        "Photosynthesis is the process by which plants use sunlight, water and carbon dioxide to produce oxygen and energy in the form of sugar.",
-      marks: 5,
-      createdAt: new Date("2023-06-02T14:00:00Z"),
-    },
-    {
-      id: 3,
-      title: "Essay on Climate Change",
-      type: "long",
-      longAnswer:
-        "Climate change is a long-term change in the average weather patterns that have come to define Earth's local, regional and global climates...",
-      marks: 10,
-      createdAt: new Date("2023-06-03T09:00:00Z"),
-    },
-  ]);
-
+  const [questions, setQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState({
     title: "",
     type: "mcq",
@@ -41,9 +12,123 @@ const ManageQuestions = () => {
     longAnswer: "",
     correctOption: "",
     marks: 0,
+    user: "defaultUser" // Add a default user or fetch the user dynamically
   });
-
+  const [editingQuestion, setEditingQuestion] = useState(null);
   const [filter, setFilter] = useState("");
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const res = await axios.get("http://localhost:3001/api/questions");
+        if (res.status === 200) {
+          setQuestions(res.data);
+        }
+      } catch (err) {
+        console.log(err.response?.data?.message || err.message);
+        toast.error(err.response?.data?.message || "Failed to fetch questions");
+      }
+    };
+    fetchQuestions();
+  }, []);
+
+  const addQuestion = async () => {
+    if (
+      newQuestion.title === "" ||
+      newQuestion.type === "" ||
+      newQuestion.marks === 0 ||
+      (newQuestion.type === "mcq" && newQuestion.options.some((opt) => opt === "")) ||
+      (newQuestion.type === "mcq" && newQuestion.correctOption === "") ||
+      (newQuestion.type === "short" && newQuestion.shortAnswer === "") ||
+      (newQuestion.type === "long" && newQuestion.longAnswer === "")
+    ) {
+      toast.error("Please fill all the fields");
+      return;
+    }
+
+    try {
+      if (editingQuestion) {
+        const res = await axios({
+          url: `http://localhost:3001/api/questions/${editingQuestion._id}`,
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: newQuestion,
+        });
+        if (res.status === 200) {
+          toast.success("Question updated successfully");
+          setQuestions(
+            questions.map((q) =>
+              q._id === editingQuestion._id
+                ? { ...newQuestion, _id: q._id, createdAt: q.createdAt }
+                : q
+            )
+          );
+          setEditingQuestion(null);
+        } else {
+          toast.error("Failed to update question");
+        }
+      } else {
+        const res = await axios({
+          url: "http://localhost:3001/api/questions",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: newQuestion,
+        });
+        if (res.status === 201 || res.status === 200) {
+          toast.success("Question added successfully");
+          setQuestions([
+            ...questions,
+            {
+              ...newQuestion,
+              _id: res.data._id,
+              createdAt: new Date(),
+            },
+          ]);
+          setNewQuestion({
+            title: "",
+            type: "mcq",
+            options: ["", "", "", ""],
+            shortAnswer: "",
+            longAnswer: "",
+            correctOption: "",
+            marks: 0,
+            user: "defaultUser" // Reset the user field
+          });
+        }
+      }
+    } catch (err) {
+      console.log(err.response?.data?.message || err.message);
+      toast.error(err.response?.data?.message || "Failed to add/update question");
+    }
+  };
+
+  const editQuestion = (question) => {
+    setEditingQuestion(question);
+    setNewQuestion(question);
+  };
+
+  const deleteQuestion = async (id) => {
+    try {
+      const res = await axios.delete(`http://localhost:3001/api/questions/${id}`);
+      if (res.status === 200) {
+        toast.success("Question deleted successfully");
+        setQuestions(questions.filter((q) => q._id !== id));
+      } else {
+        toast.error("Failed to delete question");
+      }
+    } catch (err) {
+      console.log(err.response?.data?.message || err.message);
+      toast.error(err.response?.data?.message || "Failed to delete question");
+    }
+  };
+
+  const filteredQuestions = questions.filter((q) =>
+    q.title.toLowerCase().includes(filter.toLowerCase())
+  );
 
   const containerStyle = {
     maxWidth: "800px",
@@ -106,26 +191,6 @@ const ManageQuestions = () => {
     color: "white",
     fontWeight: "bold",
   };
-
-  const addQuestion = () => {
-    setQuestions([
-      ...questions,
-      { ...newQuestion, id: questions.length + 1, createdAt: new Date() },
-    ]);
-    setNewQuestion({
-      title: "",
-      type: "mcq",
-      options: ["", "", "", ""],
-      shortAnswer: "",
-      longAnswer: "",
-      correctOption: "",
-      marks: 0,
-    });
-  };
-
-  const filteredQuestions = questions.filter((q) =>
-    q.title.toLowerCase().includes(filter.toLowerCase())
-  );
 
   return (
     <div style={containerStyle}>
@@ -211,7 +276,7 @@ const ManageQuestions = () => {
           }
         />
         <button style={buttonStyle} onClick={addQuestion}>
-          Add Question
+          {editingQuestion ? "Update Question" : "Add Question"}
         </button>
       </form>
       <input
@@ -229,11 +294,12 @@ const ManageQuestions = () => {
             <th style={headerCellStyle}>Answer/Options</th>
             <th style={headerCellStyle}>Marks</th>
             <th style={headerCellStyle}>Created At</th>
+            <th style={headerCellStyle}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {filteredQuestions.map((q) => (
-            <tr key={q.id}>
+            <tr key={q._id}>
               <td style={cellStyle}>{q.title}</td>
               <td style={cellStyle}>{q.type}</td>
               <td style={cellStyle}>
@@ -244,7 +310,21 @@ const ManageQuestions = () => {
                   : q.longAnswer}
               </td>
               <td style={cellStyle}>{q.marks}</td>
-              <td style={cellStyle}>{q.createdAt.toLocaleString()}</td>
+              <td style={cellStyle}>{new Date(q.createdAt).toLocaleString()}</td>
+              <td style={cellStyle}>
+                <button
+                  style={buttonStyle}
+                  onClick={() => editQuestion(q)}
+                >
+                  Edit
+                </button>
+                <button
+                  style={{ ...buttonStyle, backgroundColor: "#e74c3c" }}
+                  onClick={() => deleteQuestion(q._id)}
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

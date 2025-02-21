@@ -1,8 +1,7 @@
 import express from "express";
 import { getDb } from "../db/conn.mjs";
 import Test from "../models/test.mjs";
-
-
+import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -10,7 +9,6 @@ router.get("/", async (req, res) => {
   try {
     const db = getDb().connection;
     const tests = await db.collection("tests").find({}).toArray();
-    //console.log(tests)
     return res.status(200).json(tests);
   } catch (err) {
     console.log(err);
@@ -18,28 +16,10 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const db = getDb().connection;
-    const {
-      subject,
-      numQuestions,
-      mcqCount,
-      shortCount,
-      longCount,
-      duration,
-      instructions,
-      sumQuestions,
-      isValid,
-      // //title,
-      // subject,
-      // //class: className,
-      // //user,
-      // //questions,
-      // duration,
-      // //marks,
-      // instructions,
-    } = req.body;
+    const { subject, numQuestions, mcqCount, shortCount, longCount, duration, instructions, sumQuestions } = req.body;
 
     const test = new Test({
       subject,
@@ -50,72 +30,32 @@ router.post("/", (req, res) => {
       duration,
       instructions,
       sumQuestions,
-      isValid,
-      // //title,
-      // subject,
-      // //class: className,
-      // //user,
-      // //questions,
-      // duration,
-      // //marks,
-      // instructions,
     });
 
-    test.save();
-    return res.status(201).json({ message: "Test added successfully" });
+    await test.save();
+    return res.status(201).json({ message: "Test added successfully", _id: test._id });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const db = getDb().connection;
-    const {
-      subject,
-      numQuestions,
-      mcqCount,
-      shortCount,
-      longCount,
-      duration,
-      instructions,
-      sumQuestions,
-      isValid,
-      // //title,
-      // subject,
-      // //class: className,
-      // //user,
-      // //questions,
-      // duration,
-      // //marks,
-      // instructions,
-    } = req.body;
+    const { subject, numQuestions, mcqCount, shortCount, longCount, duration, instructions, sumQuestions } = req.body;
 
-    const test = db.collection("tests").updateOne(
-      { _id: req.params.id },
+    const test = await db.collection("tests").updateOne(
+      { _id: new mongoose.Types.ObjectId(req.params.id) },
       {
-        $set: {
-          subject,
-          numQuestions,
-          mcqCount,
-          shortCount,
-          longCount,
-          duration,
-          instructions,
-          sumQuestions,
-          isValid,
-          // //title,
-          // subject,
-          // //class: className,
-          // //user,
-          // //questions,
-          // duration,
-          // //marks,
-          // instructions,
-        },
+        $set: { subject, numQuestions, mcqCount, shortCount, longCount, duration, instructions, sumQuestions },
       }
     );
+
+    if (test.modifiedCount === 0) {
+      return res.status(404).json({ message: "Test not found" });
+    }
+
     return res.status(200).json({ message: "Test updated successfully" });
   } catch (err) {
     console.log(err);
@@ -123,10 +63,15 @@ router.put("/:id", (req, res) => {
   }
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const db = getDb().connection;
-    const test = db.collection("tests").deleteOne({ _id: req.params.id });
+    const test = await db.collection("tests").deleteOne({ _id: new mongoose.Types.ObjectId(req.params.id) });
+
+    if (test.deletedCount === 0) {
+      return res.status(404).json({ message: "Test not found" });
+    }
+
     return res.status(200).json({ message: "Test deleted successfully" });
   } catch (err) {
     console.log(err);

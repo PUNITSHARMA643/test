@@ -12,6 +12,7 @@ const GenerateTest = () => {
   const [instructions, setInstructions] = useState("");
   const [sumQuestions, setSumQuestions] = useState(0);
   const [isValid, setIsValid] = useState(false);
+  const [editingTest, setEditingTest] = useState(null);
 
   useEffect(() => {
     const sum = mcqCount + shortCount + longCount;
@@ -19,11 +20,40 @@ const GenerateTest = () => {
     setIsValid(sum <= numQuestions && sum > 0 && numQuestions > 0);
   }, [mcqCount, shortCount, longCount, numQuestions]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isValid) {
-      console.log("Generating test...");
-      // Add your test generation logic here
+      try {
+        const testData = {
+          subject,
+          numQuestions,
+          mcqCount,
+          shortCount,
+          longCount,
+          duration,
+          instructions,
+          sumQuestions,
+        };
+
+        if (editingTest) {
+          const response = await axios.put(`http://localhost:3001/api/tests/${editingTest._id}`, testData);
+          if (response.status === 200) {
+            toast.success("Test updated successfully!");
+            setEditingTest(null);
+          } else {
+            toast.error("Failed to update test.");
+          }
+        } else {
+          const response = await axios.post("http://localhost:3001/api/tests", testData);
+          if (response.status === 201 || response.status === 200) {
+            toast.success("Test generated successfully!");
+          } else {
+            toast.error("Failed to generate test.");
+          }
+        }
+      } catch (error) {
+        toast.error("Failed to generate/update test.");
+      }
     }
   };
 
@@ -140,9 +170,7 @@ const GenerateTest = () => {
             placeholder="Enter total questions"
             value={numQuestions || ""}
             onChange={(e) => setNumQuestions(parseInt(e.target.value) || 0)}
-            style={
-              focusedInput === "numQuestions" ? activeInputStyle : inputStyle
-            }
+            style={focusedInput === "numQuestions" ? activeInputStyle : inputStyle}
             onFocus={() => setFocusedInput("numQuestions")}
             onBlur={() => setFocusedInput("")}
           />
@@ -172,9 +200,7 @@ const GenerateTest = () => {
             placeholder="Enter short question count"
             value={shortCount || ""}
             onChange={(e) => setShortCount(parseInt(e.target.value) || 0)}
-            style={
-              focusedInput === "shortCount" ? activeInputStyle : inputStyle
-            }
+            style={focusedInput === "shortCount" ? activeInputStyle : inputStyle}
             onFocus={() => setFocusedInput("shortCount")}
             onBlur={() => setFocusedInput("")}
           />
@@ -216,24 +242,20 @@ const GenerateTest = () => {
           <input
             id="instructions"
             type="text"
-            placeholder="Enter instructions comma saparated"
+            placeholder="Enter instructions comma separated"
             value={instructions || ""}
             onChange={(e) => setInstructions(e.target.value)}
-            style={
-              focusedInput === "instructions" ? activeInputStyle : inputStyle
-            }
+            style={focusedInput === "instructions" ? activeInputStyle : inputStyle}
             onFocus={() => setFocusedInput("instructions")}
             onBlur={() => setFocusedInput("")}
           />
         </div>
         <p style={sumStyle}>
-          Sum of Questions: <strong>{sumQuestions}</strong> /{" "}
-          <strong>{numQuestions}</strong>
+          Sum of Questions: <strong>{sumQuestions}</strong> / <strong>{numQuestions}</strong>
         </p>
         {!isValid && sumQuestions > 0 && (
           <p style={errorStyle}>
-            The sum of question types should not exceed the total number of
-            questions.
+            The sum of question types should not exceed the total number of questions.
           </p>
         )}
         <button
@@ -241,7 +263,7 @@ const GenerateTest = () => {
           disabled={!isValid}
           style={isValid ? buttonStyle : disabledButtonStyle}
         >
-          Generate Test
+          {editingTest ? "Update Test" : "Generate Test"}
         </button>
       </form>
     </div>

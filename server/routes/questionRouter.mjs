@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
     console.log("Question to be saved:", question);
 
     await question.save();
-    return res.status(201).json({ message: "Question added successfully" });
+    return res.status(201).json({ message: "Question added successfully", _id: question._id });
   } catch (err) {
     console.error("Error adding question:", err);
     return res.status(500).json({ message: "Internal server error" });

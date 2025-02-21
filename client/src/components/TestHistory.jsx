@@ -3,30 +3,19 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 
 const TestHistory = () => {
-  const [tests, setTests] = useState([
-    {
-      id: 1,
-      title: "Math Test 1",
-      subject: "Mathematics",
-      class: "10th",
-      createdAt: "2023-06-01T10:00:00Z",
-      questionCount: 20,
-      duration: 60,
-      marks: 100,
-      instructions: ["No calculators allowed", "Answer all questions"],
-    },
-    {
-      id: 2,
-      title: "Science Test 1",
-      subject: "Physics",
-      class: "11th",
-      createdAt: "2023-06-05T14:00:00Z",
-      questionCount: 30,
-      duration: 90,
-      marks: 150,
-      instructions: ["Calculators permitted", "Choose any 25 questions"],
-    },
-  ]);
+  const [tests, setTests] = useState([]);
+
+  useEffect(() => {
+    const fetchTests = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/api/tests");
+        setTests(response.data);
+      } catch (error) {
+        toast.error("Failed to fetch test history.");
+      }
+    };
+    fetchTests();
+  }, []);
 
   const [sortField, setSortField] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -128,8 +117,14 @@ const TestHistory = () => {
     }
   };
 
-  const deleteTest = (id) => {
-    setTests(tests.filter((test) => test.id !== id));
+  const deleteTest = async (_id) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/tests/${_id}`);
+      setTests(tests.filter((test) => test._id !== _id));
+      toast.success("Test deleted successfully.");
+    } catch (error) {
+      toast.error("Failed to delete test.");
+    }
   };
 
   const viewTestDetails = (test) => {
@@ -176,7 +171,7 @@ const TestHistory = () => {
         </thead>
         <tbody>
           {tests.map((test) => (
-            <tr key={test.id}>
+            <tr key={test._id}>
               <td style={cellStyle}>{test.title}</td>
               <td style={cellStyle}>{test.subject}</td>
               <td style={cellStyle}>{test.class}</td>
@@ -192,7 +187,7 @@ const TestHistory = () => {
                 </button>
                 <button
                   style={deleteButtonStyle}
-                  onClick={() => deleteTest(test.id)}
+                  onClick={() => deleteTest(test._id)}
                 >
                   Delete
                 </button>
