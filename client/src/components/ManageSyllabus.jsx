@@ -3,26 +3,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 
 const ManageSyllabus = () => {
-  const [syllabuses, setSyllabuses] = useState([
-    {
-      id: 1,
-      title: "Advanced Mathematics",
-      numOfChapters: 12,
-      chapters: ["Algebra", "Geometry", "Trigonometry", "Calculus"],
-      subject: "Mathematics",
-      class: "10th",
-      createdAt: new Date("2023-06-01T10:00:00Z"),
-    },
-    {
-      id: 2,
-      title: "Modern Physics",
-      numOfChapters: 10,
-      chapters: ["Mechanics", "Thermodynamics", "Optics", "Electromagnetism"],
-      subject: "Physics",
-      class: "11th",
-      createdAt: new Date("2023-06-05T14:00:00Z"),
-    },
-  ]);
+  const [syllabuses, setSyllabuses] = useState([]);
 
   const [newSyllabus, setNewSyllabus] = useState({
     title: "",
@@ -30,9 +11,11 @@ const ManageSyllabus = () => {
     chapters: [],
     subject: "",
     className: "",
+    duration: 0, // New field
+    totalMarks: 0, // New field
   });
 
-  // fetch syllabus from server\
+  // fetch syllabus from server
   useEffect(() => {
     const fetchSyllabus = async () => {
       try {
@@ -132,9 +115,11 @@ const ManageSyllabus = () => {
     if (
       newSyllabus.title === "" ||
       newSyllabus.subject === "" ||
-      newSyllabus.class === "" ||
+      newSyllabus.className === "" ||
       newSyllabus.numOfChapters === 0 ||
-      newSyllabus.chapters.length === 0
+      newSyllabus.chapters.length === 0 ||
+      newSyllabus.duration === 0 || // New field validation
+      newSyllabus.totalMarks === 0 // New field validation
     ) {
       toast.error("Please fill all the fields");
       return;
@@ -157,8 +142,8 @@ const ManageSyllabus = () => {
           toast.success("Syllabus updated successfully");
           setSyllabuses(
             syllabuses.map((s) =>
-              s.id === editingSyllabus.id
-                ? { ...newSyllabus, id: s.id, createdAt: s.createdAt }
+              s._id === editingSyllabus._id
+                ? { ...newSyllabus, _id: s._id, createdAt: s.createdAt }
                 : s
             )
           );
@@ -181,7 +166,7 @@ const ManageSyllabus = () => {
             ...syllabuses,
             {
               ...newSyllabus,
-              id: syllabuses.length + 1,
+              _id: res.data._id,
               createdAt: new Date(),
             },
           ]);
@@ -191,6 +176,8 @@ const ManageSyllabus = () => {
             chapters: [],
             subject: "",
             className: "",
+            duration: 0, // Reset new field
+            totalMarks: 0, // Reset new field
           });
         }
       }
@@ -265,6 +252,24 @@ const ManageSyllabus = () => {
             setNewSyllabus({ ...newSyllabus, className: e.target.value })
           }
         />
+        <input
+          style={inputStyle}
+          type="number"
+          placeholder="Duration (minutes)"
+          value={newSyllabus.duration}
+          onChange={(e) =>
+            setNewSyllabus({ ...newSyllabus, duration: e.target.value })
+          }
+        />
+        <input
+          style={inputStyle}
+          type="number"
+          placeholder="Total Marks"
+          value={newSyllabus.totalMarks}
+          onChange={(e) =>
+            setNewSyllabus({ ...newSyllabus, totalMarks: e.target.value })
+          }
+        />
         <textarea
           style={{ ...inputStyle, minHeight: "100px" }}
           placeholder="Chapters (comma-separated)"
@@ -281,6 +286,8 @@ const ManageSyllabus = () => {
             <th style={headerCellStyle}>Title</th>
             <th style={headerCellStyle}>Subject</th>
             <th style={headerCellStyle}>Class</th>
+            <th style={headerCellStyle}>Duration</th>
+            <th style={headerCellStyle}>Total Marks</th>
             <th style={headerCellStyle}>Number of Chapters</th>
             <th style={headerCellStyle}>Chapters</th>
             <th style={headerCellStyle}>Created At</th>
@@ -290,13 +297,15 @@ const ManageSyllabus = () => {
         <tbody>
           {syllabuses.length > 0 &&
             syllabuses.map((syllabus) => (
-              <tr key={syllabus.id}>
+              <tr key={syllabus._id}>
                 <td style={cellStyle}>{syllabus.title}</td>
                 <td style={cellStyle}>{syllabus.subject}</td>
-                <td style={cellStyle}>{syllabus.class}</td>
+                <td style={cellStyle}>{syllabus.className}</td>
+                <td style={cellStyle}>{syllabus.duration}</td>
+                <td style={cellStyle}>{syllabus.totalMarks}</td>
                 <td style={cellStyle}>{syllabus.numOfChapters}</td>
                 <td style={cellStyle}>{syllabus.chapters.join(", ")}</td>
-                {/* <td style={cellStyle}>{syllabus.createdAt}</td> */}
+                <td style={cellStyle}>{new Date(syllabus.createdAt).toLocaleString()}</td>
                 <td style={cellStyle}>
                   <button
                     style={actionButtonStyle}

@@ -163,7 +163,7 @@ const TestHistory = () => {
             <th style={headerCellStyle} onClick={() => handleSort("duration")}>
               Duration (min)
             </th>
-            <th style={headerCellStyle} onClick={() => handleSort("marks")}>
+            <th style={headerCellStyle} onClick={() => handleSort("totalMarks")}>
               Total Marks
             </th>
             <th style={headerCellStyle}>Actions</th>
@@ -177,7 +177,7 @@ const TestHistory = () => {
               <td style={cellStyle}>{test.class}</td>
               <td style={cellStyle}>{formatDate(test.createdAt)}</td>
               <td style={cellStyle}>{test.duration}</td>
-              <td style={cellStyle}>{test.marks}</td>
+              <td style={cellStyle}>{test.totalMarks}</td>
               <td style={cellStyle}>
                 <button
                   style={buttonStyle}
@@ -215,10 +215,7 @@ const TestHistory = () => {
               <strong>Duration:</strong> {selectedTest.duration} minutes
             </p>
             <p>
-              <strong>Total Marks:</strong> {selectedTest.marks}
-            </p>
-            <p>
-              <strong>Number of Questions:</strong> {selectedTest.questionCount}
+              <strong>Total Marks:</strong> {selectedTest.totalMarks}
             </p>
             <p>
               <strong>Instructions:</strong>

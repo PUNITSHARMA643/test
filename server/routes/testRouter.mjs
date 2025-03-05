@@ -19,17 +19,15 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const db = getDb().connection;
-    const { subject, numQuestions, mcqCount, shortCount, longCount, duration, instructions, sumQuestions } = req.body;
+    const { title, subject, class: className, duration, totalMarks, instructions } = req.body;
 
     const test = new Test({
+      title,
       subject,
-      numQuestions,
-      mcqCount,
-      shortCount,
-      longCount,
+      class: className,
       duration,
+      totalMarks,
       instructions,
-      sumQuestions,
     });
 
     await test.save();
@@ -43,12 +41,12 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const db = getDb().connection;
-    const { subject, numQuestions, mcqCount, shortCount, longCount, duration, instructions, sumQuestions } = req.body;
+    const { title, subject, class: className, duration, totalMarks, instructions } = req.body;
 
     const test = await db.collection("tests").updateOne(
       { _id: new mongoose.Types.ObjectId(req.params.id) },
       {
-        $set: { subject, numQuestions, mcqCount, shortCount, longCount, duration, instructions, sumQuestions },
+        $set: { title, subject, class: className, duration, totalMarks, instructions },
       }
     );
 

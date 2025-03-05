@@ -19,7 +19,7 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const db = await getDb().connection;
-    const { title, className, subject, numOfChapters, chapters } = req.body;
+    const { title, className, subject, numOfChapters, chapters, duration, totalMarks } = req.body;
 
     const syllabus = new Book({
       title,
@@ -27,6 +27,8 @@ router.post("/", async (req, res) => {
       subject,
       numOfChapters,
       chapters,
+      duration, // New field
+      totalMarks, // New field
     });
 
     await syllabus.save();
@@ -40,12 +42,12 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const db = await getDb().connection;
-    const { title, className, subject, numOfChapters, chapters } = req.body;
+    const { title, className, subject, numOfChapters, chapters, duration, totalMarks } = req.body;
     const syllabus = await db
       .collection("books")
       .updateOne(
         { _id: new mongoose.Types.ObjectId(req.params.id) },
-        { $set: { title, className, subject, numOfChapters, chapters } }
+        { $set: { title, className, subject, numOfChapters, chapters, duration, totalMarks } }
       );
 
     if (syllabus.modifiedCount === 0) {
