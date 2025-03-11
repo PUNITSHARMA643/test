@@ -77,4 +77,16 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Add this new route to fetch test data for analysis
+router.get("/data", async (req, res) => {
+  try {
+    const db = getDb().connection;
+    const tests = await db.collection("tests").find({}).toArray();
+    return res.status(200).json(tests);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 export default router;

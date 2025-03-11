@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const TestHistory = () => {
   const [tests, setTests] = useState([]);
+  const [data, setData] = useState([]);
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortDirection, setSortDirection] = useState("desc");
+  const [selectedTest, setSelectedTest] = useState(null);
 
   useEffect(() => {
     const fetchTests = async () => {
@@ -17,9 +22,61 @@ const TestHistory = () => {
     fetchTests();
   }, []);
 
-  const [sortField, setSortField] = useState("createdAt");
-  const [sortDirection, setSortDirection] = useState("desc");
-  const [selectedTest, setSelectedTest] = useState(null);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/api/tests/data");
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const sortedTests = [...tests].sort((a, b) => {
+      if (a[sortField] < b[sortField]) return sortDirection === "asc" ? -1 : 1;
+      if (a[sortField] > b[sortField]) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+    setTests(sortedTests);
+  }, [sortField, sortDirection]);
+
+  const handleSort = (field) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const deleteTest = async (_id) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/tests/${_id}`);
+      setTests(tests.filter((test) => test._id !== _id));
+      toast.success("Test deleted successfully.");
+    } catch (error) {
+      toast.error("Failed to delete test.");
+    }
+  };
+
+  const viewTestDetails = (test) => {
+    setSelectedTest(test);
+  };
+
+  const formatDate = (dateString) => {
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
 
   const containerStyle = {
     maxWidth: "1000px",
@@ -97,49 +154,6 @@ const TestHistory = () => {
     ...buttonStyle,
     backgroundColor: "#7f8c8d",
     float: "right",
-  };
-
-  useEffect(() => {
-    const sortedTests = [...tests].sort((a, b) => {
-      if (a[sortField] < b[sortField]) return sortDirection === "asc" ? -1 : 1;
-      if (a[sortField] > b[sortField]) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
-    setTests(sortedTests);
-  }, [sortField, sortDirection]);
-
-  const handleSort = (field) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
-  const deleteTest = async (_id) => {
-    try {
-      await axios.delete(`http://localhost:3001/api/tests/${_id}`);
-      setTests(tests.filter((test) => test._id !== _id));
-      toast.success("Test deleted successfully.");
-    } catch (error) {
-      toast.error("Failed to delete test.");
-    }
-  };
-
-  const viewTestDetails = (test) => {
-    setSelectedTest(test);
-  };
-
-  const formatDate = (dateString) => {
-    const options = {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   return (
@@ -234,6 +248,21 @@ const TestHistory = () => {
           </div>
         </div>
       )}
+
+      <h2 style={headingStyle}>Test Data Analysis</h2>
+      <div style={{ width: "100%", height: 400 }}>
+        <ResponsiveContainer>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="title" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="totalMarks" fill="#8884d8" />
+            <Bar dataKey="duration" fill="#82ca9d" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

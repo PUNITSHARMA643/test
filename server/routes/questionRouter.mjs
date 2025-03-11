@@ -18,26 +18,25 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const db = await getDb().connection;
-    const { title, type, options, shortAnswer, longAnswer, correctOption, marks, user } = req.body;
+    const { title, options, correctOption, marks, user } = req.body;
 
-    console.log("Received data:", req.body);
+    if (!title || !options || !correctOption || !marks) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
     const question = new Question({
       title,
-      type,
       options,
-      shortAnswer,
-      longAnswer,
       correctOption,
       marks,
       user,
     });
 
-    console.log("Question to be saved:", question);
-
     await question.save();
-    return res.status(201).json({ message: "Question added successfully", _id: question._id });
+    return res.status(201).json({ 
+      message: "Question added successfully", 
+      _id: question._id 
+    });
   } catch (err) {
     console.error("Error adding question:", err);
     return res.status(500).json({ message: "Internal server error" });
@@ -46,42 +45,40 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const db = await getDb().connection;
-    const { title, type, options, shortAnswer, longAnswer, correctOption, marks, user } = req.body;
-    console.log("Updating question with ID:", req.params.id);
-    const question = await db.collection("questions").updateOne(
-      { _id: new mongoose.Types.ObjectId(req.params.id) },
-      {
-        $set: { title, type, options, shortAnswer, longAnswer, correctOption, marks, user },
-      }
+    const { title, options, correctOption, marks, user } = req.body;
+
+    if (!title || !options || !correctOption || !marks) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const question = await Question.findByIdAndUpdate(
+      req.params.id,
+      { title, options, correctOption, marks, user },
+      { new: true }
     );
 
-    if (question.modifiedCount === 0) {
-      console.log("Question not found with ID:", req.params.id);
+    if (!question) {
       return res.status(404).json({ message: "Question not found" });
     }
 
     return res.status(200).json({ message: "Question updated successfully" });
   } catch (err) {
-    console.log("Error updating question:", err);
+    console.error("Error updating question:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
 
 router.delete("/:id", async (req, res) => {
   try {
-    const db = await getDb().connection;
-    const question = await db
-      .collection("questions")
-      .deleteOne({ _id: new mongoose.Types.ObjectId(req.params.id) });
-
-    if (question.deletedCount === 0) {
+    const question = await Question.findByIdAndDelete(req.params.id);
+    
+    if (!question) {
       return res.status(404).json({ message: "Question not found" });
     }
 
     return res.status(200).json({ message: "Question deleted successfully" });
   } catch (err) {
-    console.log(err);
+    console.error("Error deleting question:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 });

@@ -1,0 +1,66 @@
+.navbar {
+    background-color: teal;
+  }
+  
+  .btn-teal {
+    background-color: teal;
+    color: white;
+    border-radius: 45px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+  
+  .btn-teal:hover {
+    background-color: #00cccc;
+    transform: scale(1.1);
+  }
+  
+  .landing-content {
+    padding: 4rem 0;
+  }
+  
+  .landing-h1 {
+    font-size: 3rem;
+    color: #5252cf;
+    font-weight: bold;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .landing-desc {
+    margin: 1rem 0;
+    font-size: 1.2rem;
+    color: #555;
+    line-height: 1.6;
+    opacity: 0.8;
+  }
+  
+  .features-heading {
+    font-size: 2.5rem;
+    color: teal;
+    margin-bottom: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .feature {
+    background: white;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 2rem;
+    text-align: left;
+    transition: transform 0.3s ease;
+  }
+  
+  .feature:hover {
+    transform: translateY(-10px);
+  }
+  
+  .feature h3 {
+    font-size: 1.6rem;
+    color: rgb(82, 82, 207);
+    margin-bottom: 1rem;
+  }
+  
+  .feature p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #333;
+  }

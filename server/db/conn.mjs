@@ -20,6 +20,20 @@ export const connectToDatabase = async () => {
   }
 };
 
+
+// Add this function to test the connection
+export const testConnection = async () => {
+  try {
+    const db = await getDb();
+    await db.command({ ping: 1 });
+    console.log("Database connection successful");
+    return true;
+  } catch (err) {
+    console.error("Database connection failed:", err);
+    return false;
+  }
+};
+
 export const getDb = () => {
   if (!dbInstance) {
     throw new Error("Database not connected");

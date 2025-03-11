@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const ManageSyllabus = () => {
   const [syllabuses, setSyllabuses] = useState([]);
+  const [data, setData] = useState([]);
 
   const [newSyllabus, setNewSyllabus] = useState({
     title: "",
@@ -29,6 +31,19 @@ const ManageSyllabus = () => {
       }
     };
     fetchSyllabus();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/api/syllabus");
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const [editingSyllabus, setEditingSyllabus] = useState(null);
@@ -324,6 +339,21 @@ const ManageSyllabus = () => {
             ))}
         </tbody>
       </table>
+
+      <h2 style={headingStyle}>Syllabus Data Analysis</h2>
+      <div style={{ width: "100%", height: 400 }}>
+        <ResponsiveContainer>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="title" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="totalMarks" fill="#8884d8" />
+            <Bar dataKey="duration" fill="#82ca9d" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

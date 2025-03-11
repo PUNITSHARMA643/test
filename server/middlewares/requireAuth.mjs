@@ -1,23 +1,28 @@
 import "dotenv/config";
 import jwt from "jsonwebtoken";
-import express from "express";
-const router = express.Router();
 
-router.use((req, res, next) => {
-  const bearer = req.headers["authorization"];
-  const token = bearer.split(" ")[1];
-  if (!token) {
-    res.status(401).send("Unauthorized access");
-  }
-  const decoded = jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      res.status(401).send("Unauthorized access");
+const requireAuth = (req, res, next) => {
+  try {
+    const bearer = req.headers["authorization"];
+    if (!bearer) {
+      return res.status(401).json({ message: "No token provided" });
     }
-    return decoded;
-  });
-  res.user = decoded;
-  next();
-});
 
-export default router;
+    const token = bearer.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Invalid token format" });
+    }
 
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+      req.user = decoded;
+      next();
+    });
+  } catch (error) {
+    return res.status(401).json({ message: "Authentication failed" });
+  }
+};
+
+export default requireAuth;

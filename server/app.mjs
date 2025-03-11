@@ -1,11 +1,13 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { connectToDatabase } from "./db/conn.mjs";
+import { connectToDatabase, testConnection } from "./db/conn.mjs";  // Add testConnection import
 import authRouter from "./routes/authRouter.mjs";
 import syllabusRouter from "./routes/syllabusRouter.mjs";
 import testRouter from "./routes/testRouter.mjs";
-import questionRouter from "./routes/questionRouter.mjs"; // Import the question router
+import questionRouter from "./routes/questionRouter.mjs";
+import takeTestRouter from "./routes/takeTestRouter.mjs";
+// ... rest of the imports ...
 
 const port = process.env.PORT || 3001;
 const app = express();
@@ -19,6 +21,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Test database connection before setting up routes
+await testConnection().catch(console.error);
+
 // routes
 app.get("/", (req, res) => {
   res.send("Authentication Server");
@@ -27,6 +32,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/syllabus", syllabusRouter);
 app.use("/api/tests", testRouter);
 app.use("/api/questions", questionRouter); // Use the question router
+app.use("/api/take-test", takeTestRouter); // Add this line
 
 // Connect to MongoDB and start server
 connectToDatabase()

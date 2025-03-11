@@ -1,8 +1,8 @@
 import React from "react";
-import "./footer.css";
+import "../pages/footer.css"; // Corrected import path
 import { FaFacebook, FaTwitter, FaInstagram } from "react-icons/fa";
 
-export default function Footer() {
+const Footer = () => {
   return (
     <footer className="footer">
       <div className="container">
@@ -17,8 +17,10 @@ export default function Footer() {
             <FaInstagram />
           </a>
         </div>
-        <p>&copy; 2025 Test Generator. All rights reserved.</p>
+        <p>&copy; 2025 Student Test Portal. All rights reserved.</p>
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;
